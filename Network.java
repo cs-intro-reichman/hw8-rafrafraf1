@@ -29,6 +29,9 @@ public class Network {
      *  If there is no such user, returns null.
      *  Notice that the method receives a String, and returns a User object. */
     public User getUser(String name) {
+        if (name == null) {
+            return null;
+        }
         for (int i = 0; i < userCount; i++) {
             if (name.equals(users[i].getName())) {
                 return users[i];
@@ -54,31 +57,41 @@ public class Network {
      *  If any of the two names is not a user in this network,
      *  or if the "follows" addition failed for some reason, returns false. */
     public boolean addFollowee(String name1, String name2) {
-        User user2 = getUser(name2);
-        if (getUser(name1) == null || user2 == null) {
+        User user1 = getUser(name1);
+        if (getUser(name2) == null || user1 == null || name1.equals(name2)) {
             return false;
         }
-        return user2.addFollowee(name1);
+        return user1.addFollowee(name2);
     }
     
     /** For the user with the given name, recommends another user to follow. The recommended user is
      *  the user that has the maximal mutual number of followees as the user with the given name. */
     public String recommendWhoToFollow(String name) {
         User other = getUser(name);
-        User recUser = null;
+        String recUser = null;
+        String[] foll = other.getfFollows();
         for (int i = 0; i < userCount; i++) {
-            if (recUser == null) {
-                recUser = users[i];
+            if (users[i].getName().equals(name)) {
                 continue;
             }
-            if (other.countMutual(users[i]) > other.countMutual(recUser)) {
-                recUser = users[i];
+            boolean good = true;
+            for (int j = 0; j < foll.length; j++) {
+                if (users[i].equals(foll[j])) {
+                    good = false;
+                    break;
+                }
+            }
+            if (good) {
+                if (recUser == null) {
+                    recUser = users[i].getName();
+                    continue;
+                }
+                if (other.countMutual(users[i]) > other.countMutual(getUser(recUser))) {
+                    recUser = users[i].getName();
+                }
             }
         }
-        if (recUser == null) {
-            return null;
-        }
-        return recUser.getName();
+        return recUser;
     }
 
     /** Computes and returns the name of the most popular user in this network: 
@@ -120,9 +133,9 @@ public class Network {
 
     // Returns a textual description of all the users in this network, and who they follow.
     public String toString() {
-       String output = "Network:\n";
+       String output = "Network:";
        for (int i = 0; i < userCount; i++) {
-            output += users[i].toString() + "\n";
+            output += "\n" + users[i].toString();
        }
        return output;
     }
